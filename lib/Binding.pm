@@ -8,7 +8,7 @@ use Data::Dump qw(pp);
 
 use 5.008;
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 sub of_caller {
     my ($class, $level) = @_;
@@ -27,17 +27,35 @@ sub eval {
 
     my $vars = peek_my( $self->{level} );
 
-    # my $vars = closed_over( $self->{caller_cv} );
-    # pp $self;
     my $var_declare = "";
     for my $varname (keys %$vars) {
         $var_declare .= "my $varname = " . pp(${$vars->{$varname}}) . ";";
     }
     my $code = "$var_declare; $code_str";
     eval $code;
-    
 }
 
+sub var {
+    my ($self, $varname) = @_;
+
+    for (my $level = $self->{level}; $level < 100; $level++) {
+        my $vars = peek_my($level);
+        if (exists $vars->{$varname}) {
+            my $varref = $vars->{$varname};
+            if (ref($varref) eq 'SCALAR') {
+                return $$varref;
+            }
+            elsif (ref($varref) eq 'ARRAY') {
+                return @$varref;
+            }
+            elsif (ref($varref) eq 'HASH') {
+                return %$varref;
+            }
+        }
+    }
+
+    die "Unknown var: $varname";
+}
 
 1; 
 __END__
@@ -56,7 +74,7 @@ This document describes Binding version 0.01
 
     sub inc_x {
         my $b = Binding->of_caller;
-        $b->eval("$x + 1");
+        $b->eval('$x + 1');
     }
 
     sub fortytwo {
@@ -107,6 +125,10 @@ one lives the given caller frame.
         my $y = add_five;
     }
 
+=item var( $name )
+
+Return the value of the variable named $name in the specified scope.
+
 =back
 
 =head1 DEPENDENCIES
@@ -134,14 +156,12 @@ that this doesn't do what it means yet:
         add_x($b);
     }
 
-
     sub add_x {
         my $binding = shift;
 
         # But this $x is referring to the one in add()
         $binding->eval('$x + 1')
     }
-
 
     my $x = 3;
     add; # returns 6 instead of 4;
