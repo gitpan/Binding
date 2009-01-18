@@ -17,5 +17,8 @@ no_index:
     - inc
     - t
 requires:
+  Data::Dump: 1.14
+  Devel::Caller: 2.03
+  PadWalker: 1.7
   perl: 5.8.0
-version: 0.02
+version: 0.03
