@@ -2,13 +2,13 @@ package Binding;
 
 use warnings;
 use strict;
-use PadWalker qw(peek_my peek_sub closed_over);
+use PadWalker qw(peek_my peek_our peek_sub closed_over);
 use Devel::Caller qw(caller_cv);
 use Data::Dump qw(pp);
 
 use 5.008;
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 sub of_caller {
     my ($class, $level) = @_;
@@ -56,6 +56,19 @@ sub var {
 
     die "Unknown var: $varname";
 }
+
+sub my_vars {
+    my ($self) = @_;
+    my $vars = peek_my($self->{level});
+    return $vars;
+}
+
+sub our_vars {
+    my ($self) = @_;
+    my $vars = peek_our($self->{level});
+    return $vars;
+}
+
 
 1; 
 __END__
@@ -128,6 +141,25 @@ one lives the given caller frame.
 =item var( $name )
 
 Return the value of the variable named $name in the specified scope.
+
+=item my_vars
+
+Returns all variables declared with "my" in the given binding.
+
+Returns a hashref, which keys are variable names and values are
+references to variable values.
+
+See C<peek_my> function in L<PadWalker>.
+
+=item our_vars
+
+Returns all variables declared with "our" that's visible in the given
+binding.
+
+Returns a hashref, which keys are variable names and values are
+references to variable values.
+
+See C<peek_our> function in L<PadWalker>.
 
 =back
 

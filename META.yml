@@ -21,4 +21,4 @@ requires:
   Devel::Caller: 2.03
   PadWalker: 1.7
   perl: 5.8.0
-version: 0.03
+version: 0.04
